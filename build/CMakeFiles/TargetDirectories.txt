@@ -1,0 +1,3 @@
+/mnt/c/Users/haris/Desktop/projects/dot-engine/build/CMakeFiles/dot-engine.dir
+/mnt/c/Users/haris/Desktop/projects/dot-engine/build/CMakeFiles/edit_cache.dir
+/mnt/c/Users/haris/Desktop/projects/dot-engine/build/CMakeFiles/rebuild_cache.dir
