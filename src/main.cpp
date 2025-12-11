@@ -8,6 +8,27 @@
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp> 
 
+
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
+
+
+
+float yaw = -90.0f; 
+float pitch = -90.0f; 
+
+glm::vec3 direction; 
+
+float lastX = 400, lastY = 300; 
+
+float lastTime = 0.0f; 
+float deltaTime = 0.0f; 
+
 float vertices[] = {
     // positions          // colors       // texcoords
     -0.5f,-0.5f,-0.5f,  0.0f,0.0f,-1.0f,  0.0f,0.0f,
@@ -71,18 +92,26 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f, 1.0f, -1.5f)
 };
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed: y ranges bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;  
+
+    yaw += xoffset; 
+}
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-void process_input(GLFWwindow* window)
-{
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-}
+void process_input(GLFWwindow* window); 
 
 int main()
 {
@@ -109,8 +138,9 @@ int main()
     }
 
     glViewport(0, 0, 800, 600);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     unsigned int VAO; 
     glGenVertexArrays(1, &VAO);
@@ -157,7 +187,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
 
     int width, height, nrChannels; 
-    unsigned char *data = stbi_load("some.jpg", &width, &height , &nrChannels, 0);
+    unsigned char *data = stbi_load("assets/some.jpg", &width, &height , &nrChannels, 0);
 
     if(data)
     {
@@ -176,7 +206,7 @@ int main()
     glBindTexture(GL_TEXTURE_2D, texture2);
 
     stbi_set_flip_vertically_on_load(true);
-    data = stbi_load("awesomeface.png", &width, &height , &nrChannels, 0);
+    data = stbi_load("assets/awesomeface.png", &width, &height , &nrChannels, 0);
     if(data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,                      data);
@@ -194,10 +224,7 @@ int main()
     shaders.setInt("texture1", 0);
     shaders.setInt("texture2", 1);
 
-
-
     glm::mat4 model = glm::mat4(1.0f);
-
 
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
@@ -210,26 +237,24 @@ int main()
     unsigned int viewLoc = glGetUniformLocation(shaders.ID, "view");
 
 
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
 
-    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
 
-    glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-
-    view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f),
-    glm::vec3(0.0f, 0.0f, 0.0f),
-    glm::vec3(0.0f, 1.0f, 0.0f));
-
+    view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); 
     glEnable(GL_DEPTH_TEST);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // render loop 
     while(!glfwWindowShouldClose(window))
     {
         // input 
         process_input(window);
+
+
+
+        // time calculation
+        float currTime = glfwGetTime();
+        deltaTime = currTime - lastTime; 
+        lastTime = currTime; 
 
         // changing bg color
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -250,11 +275,7 @@ int main()
             float angle = 20.0f * i; 
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            const float radius = 10.0f;
-            float camX = sin(glfwGetTime()) * radius;
-            float camZ = cos(glfwGetTime()) * radius;
-            view = glm::lookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0),
-            glm::vec3(0.0, 1.0, 0.0));
+            view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); 
 
 
             shaders.setMat4(modelLoc, model);
@@ -273,4 +294,24 @@ int main()
 
     glfwTerminate(); 
     return 0; 
+}
+
+
+void process_input(GLFWwindow* window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, true);
+    }
+
+    const float cameraSpeed = deltaTime * 2.5f; // adjust accordingly
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= cameraSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
