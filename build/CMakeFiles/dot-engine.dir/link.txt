@@ -1,1 +1,0 @@
-/usr/bin/c++ "CMakeFiles/dot-engine.dir/src/glad.c.o" "CMakeFiles/dot-engine.dir/src/main.cpp.o" "CMakeFiles/dot-engine.dir/src/stb_image.cpp.o" -o /mnt/c/Users/haris/Desktop/projects/dot-engine/dot-engine  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 -lGL -ldl 
