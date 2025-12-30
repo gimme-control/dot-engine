@@ -17,8 +17,6 @@ glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 
-
-
 float yaw = -90.0f; 
 float pitch = -90.0f; 
 
